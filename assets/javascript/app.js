@@ -1,10 +1,29 @@
 $(document).ready(function () {
+    // Initialize Firebase
+    var config = {
+        apiKey: "AIzaSyB_P7ESlumLbYuFJryACvJBKkIpzRT6rkU",
+        authDomain: "daniel-database.firebaseapp.com",
+        databaseURL: "https://daniel-database.firebaseio.com",
+        projectId: "daniel-database",
+        storageBucket: "daniel-database.appspot.com",
+        messagingSenderId: "772832539382"
+    };
+    firebase.initializeApp(config);
+    var database = firebase.database();
+    var connectionsRef = database.ref("/connections");
+    //database.ref().remove();
 
     $("#start").on("click", function () {
         $("#buttons").empty();
         createButtons();
-        //alert firebase
     });
+
+    connectionsRef.on("value", function (snap) {
+        // Display the viewer count in the html.
+        // The number of online users is the number of children in the connections list.
+        $("#connected-players").text("There are " + snap.numChildren() + " connected players");
+    });
+
 
     function createButtons() {
         var buttonNames = ["Rock", "Paper", "Seven"];
@@ -15,21 +34,6 @@ $(document).ready(function () {
             $("#buttons").append(localButton);
         }
     }
-
-    // Initialize Firebase
-    var config = {
-        apiKey: "AIzaSyB_P7ESlumLbYuFJryACvJBKkIpzRT6rkU",
-        authDomain: "daniel-database.firebaseapp.com",
-        databaseURL: "https://daniel-database.firebaseio.com",
-        projectId: "daniel-database",
-        storageBucket: "daniel-database.appspot.com",
-        messagingSenderId: "772832539382"
-    };
-
-    firebase.initializeApp(config);
-    var database = firebase.database();
-    var connectionsRef = database.ref("/connections");
-    database.ref().remove();
 
     $("button").on("click", function () {
         var yourChoice = $(this).text();
