@@ -1,5 +1,22 @@
 $(document).ready(function () {
 
+    $("#start").on("click", function () {
+        $("#buttons").empty();
+        createButtons();
+        //alert firebase
+    });
+
+    function createButtons() {
+        var buttonNames = ["Rock", "Paper", "Seven"];
+        for (var i = 0; i < buttonNames.length; i++) {
+            var localButton = $("<button>");
+            localButton.addClass("button");
+            localButton.text(buttonNames[i]);
+            $("#buttons").append(localButton);
+        }
+    }
+
+
     // Initialize Firebase
     var config = {
         apiKey: "AIzaSyB_P7ESlumLbYuFJryACvJBKkIpzRT6rkU",
@@ -43,15 +60,15 @@ $(document).ready(function () {
     function compareSelections(yourChoice) {
         if (yourChoice) {
             if ((yourChoice === "R" && opponentChoice === "S") ||
-              (yourChoice === "S" && opponentChoice === "P") || 
-              (yourChoice === "P" && opponentChoice === "R")) {
+                (yourChoice === "S" && opponentChoice === "P") ||
+                (yourChoice === "P" && opponentChoice === "R")) {
                 $("#game-outcome").text("You Win!");
             } else if (yourChoice === opponentChoice) {
                 $("#game-outcome").text("You Tie!");
             } else {
                 $("#game-outcome").text("You Lose!");
             }
-        }    
+        }
 
     }
 
