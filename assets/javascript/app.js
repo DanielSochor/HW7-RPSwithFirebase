@@ -11,9 +11,10 @@ $(document).ready(function () {
     firebase.initializeApp(config);
     var database = firebase.database();
     var connectionsRef = database.ref("/connections");
-    var pressRef = database.ref("/press");
+    var pressRef = database.ref("/buttonPressed");
+
     //database.ref().push(buttonPressed);
-    //var buttonPressed = 0;
+    var buttonPressed = 0;
 
     $("#start").on("click", function () {
         $("#buttons").empty();
@@ -25,10 +26,11 @@ $(document).ready(function () {
         $("#connected-players").text("There are " + snap.numChildren() + " connected players");
     });
     pressRef.on("value", function (snap) {
-        //buttonPressed ++;
+        if (snap.child("buttonPressed").val() > buttonPressed){
+            buttonPress = snap.val().buttonPress;
+        }
         console.log("buttons pressed value: " + buttonPressed);
     });
-
 
     function createButtons() {
         var buttonNames = ["Rock", "Paper", "Seven"];
@@ -46,15 +48,12 @@ $(document).ready(function () {
         var yourChoice = $(this).text();
         yourChoice = yourChoice.charAt(0);
         console.log("selected button: " + yourChoice);
-        //yourChoice = {
-        //    yourSelection: yourChoice
-        //}
-        //database.ref().push(yourChoice);
 
-        buttonPressed++;
-        database.ref("/press").set(buttonPressed);
+        //buttonPressed = snap.val().pressRef;
+        buttonPressed ++;
+        database.ref("/buttonPressed").set(buttonPressed);
 
-        console.log("buttons pressed local: " + buttonPressed);
+        //console.log("buttons pressed local: " + buttonPressed);
         if (buttonPressed == 1) {
             var player1Choice = yourChoice;
         } else if (buttonPressed == 2) {
