@@ -11,17 +11,22 @@ $(document).ready(function () {
     firebase.initializeApp(config);
     var database = firebase.database();
     var connectionsRef = database.ref("/connections");
-    //database.ref().remove();
+    var pressRef = database.ref("/press");
+    //database.ref().push(buttonPressed);
+    //var buttonPressed = 0;
 
     $("#start").on("click", function () {
         $("#buttons").empty();
         createButtons();
     });
-
     connectionsRef.on("value", function (snap) {
         // Display the viewer count in the html.
         // The number of online users is the number of children in the connections list.
         $("#connected-players").text("There are " + snap.numChildren() + " connected players");
+    });
+    pressRef.on("value", function (snap) {
+        //buttonPressed ++;
+        console.log("buttons pressed value: " + buttonPressed);
     });
 
 
@@ -29,22 +34,38 @@ $(document).ready(function () {
         var buttonNames = ["Rock", "Paper", "Seven"];
         for (var i = 0; i < buttonNames.length; i++) {
             var localButton = $("<button>");
-            localButton.addClass("button");
+            localButton.addClass("gameButton");
             localButton.text(buttonNames[i]);
             $("#buttons").append(localButton);
         }
+        console.log("buttons created");
     }
 
-    $("button").on("click", function () {
+    $(document).on("click", ".gameButton", function () {
+        event.preventDefault();
         var yourChoice = $(this).text();
         yourChoice = yourChoice.charAt(0);
-        console.log(yourChoice);
-        yourChoice = {
-            yourSelection: yourChoice
+        console.log("selected button: " + yourChoice);
+        //yourChoice = {
+        //    yourSelection: yourChoice
+        //}
+        //database.ref().push(yourChoice);
+
+        buttonPressed++;
+        database.ref("/press").set(buttonPressed);
+
+        console.log("buttons pressed local: " + buttonPressed);
+        if (buttonPressed == 1) {
+            var player1Choice = yourChoice;
+        } else if (buttonPressed == 2) {
+            var player2Choice = yourChoice;
+            compareSelections(player1Choice, player2Choice);
         }
-        database.ref().push(yourChoice);
-        //compareSelections(yourChoice);
     });
+
+    //database.ref("/buttonPressed").on("value", function(snapshot) {
+
+    //});
 
     // Add ourselves to presence list when online.
     var connectedRef = database.ref(".info/connected");
@@ -60,19 +81,23 @@ $(document).ready(function () {
 
     var opponentChoice;
 
-    function compareSelections(yourChoice) {
-        if (yourChoice) {
-            if ((yourChoice === "R" && opponentChoice === "S") ||
-                (yourChoice === "S" && opponentChoice === "P") ||
-                (yourChoice === "P" && opponentChoice === "R")) {
-                $("#game-outcome").text("You Win!");
-            } else if (yourChoice === opponentChoice) {
-                $("#game-outcome").text("You Tie!");
-            } else {
-                $("#game-outcome").text("You Lose!");
-            }
+    function compareSelections(player1Choice, player2Choice) {
+        //if (yourChoice) {
+        if ((player1Choice === "R" && player2Choice === "S") ||
+            (player1Choice === "S" && player2Choice === "P") ||
+            (player1Choice === "P" && player2Choice === "R")) {
+            $("#game-outcome").text("You Win!");
+        } else if (player1Choice === player2Choice) {
+            $("#game-outcome").text("You Tie!");
+        } else {
+            $("#game-outcome").text("You Lose!");
         }
+        //}
 
+    }
+
+    function restart() {
+        database.ref().remove();
     }
 
 
