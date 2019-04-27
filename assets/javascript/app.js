@@ -9,31 +9,134 @@ $(document).ready(function () {
         messagingSenderId: "772832539382"
     };
     firebase.initializeApp(config);
+
+    // Create a variable to reference the database.
     var database = firebase.database();
-    var connectionsRef = database.ref("/connections");
-    var pressRef = database.ref("/buttonPressed");
+    var connectionsRef = database.ref("/connections"); //connections stored in this directory
+    //var pressRef = database.ref("/buttonPressed");
+    var connectedRef = database.ref(".info/connected"); //boolean value for connected
 
     //database.ref().push(buttonPressed);
-    var buttonPressed = 0;
+    //var gameStarted = true;
+    var player1Choice = "";
+    var player2Choice = "";
+    var gameStarted = false;
+    var yourChoice = "";
+    var opponentChoice = "";
+    var connections = 0;
+
 
     $("#start").on("click", function () {
+        //gameStarted = false;
+        // database.ref("/player1Choice").set({
+        //     player1Choice:"o"
+        // });
+        // database.ref("/player2Choice").set({
+        //     player2Choice:"o"
+        // });
         $("#buttons").empty();
         createButtons();
     });
+
+    database.ref("/player1Choice").on("value", function (snap) {
+        if (snap.child("player1Choice") != "o") {
+            console.log("first selection already made")
+            player1Choice = snap.val().player1Choice;
+            gameStarted = true;
+        //console.log("game started is " + gameStarted);
+        } else {
+            //console.log("this is the first selection")
+        }
+    });
+
     connectionsRef.on("value", function (snap) {
         // Display the viewer count in the html.
         // The number of online users is the number of children in the connections list.
-        $("#connected-players").text("There are " + snap.numChildren() + " connected players");
-    });
-    pressRef.on("value", function (snap) {
-        if (snap.child("buttonPressed").val() > buttonPressed){
-            buttonPress = snap.val().buttonPress;
+        //$("#connected-players").text("There are " + snap.numChildren() + " connected players");
+        if(snap.numChildren() == 2){
+            console.log("there are enough people to play the game");
+            $("#connected-players").text("There are " + snap.numChildren() + " connected players");
+            gameSetUp();
+        } else {
+            console.log("incorrect number of people to play");
+            $("#connected-players").text(snap.numChildren() + " connected player, awaiting additional player");
         }
-        console.log("buttons pressed value: " + buttonPressed);
     });
 
+    function gameSetUp(){
+        database.ref("/player1Choice").set({
+            player1Choice:"o"
+        });
+        database.ref("/player2Choice").set({
+            player2Choice:"o"
+        });
+    }
+
+   
+
+    $(document).on("click", ".gameButton", function () {
+        console.log("game started is: " + gameStarted);
+        event.preventDefault();
+        yourChoice = $(this).text();
+        yourChoice = yourChoice.charAt(0);
+        console.log("selected button: " + yourChoice);
+
+        if (gameStarted == false) {
+            player1Choice = yourChoice;
+            database.ref("/player1Choice").set({
+                player1Choice:yourChoice
+            })
+            //gameStarted = true;
+        } else {
+            player2Choice = yourChoice;
+            database.ref("/player2Choice").set({
+                player2Choice:yourChoice
+            })
+            opponentChoice = database.ref("/player1Choice");
+            console.log("you selected: " + yourChoice);
+            console.log("opponent selected: " + opponentChoice);
+            compareSelections(yourChoice, opponentChoice);
+        }
+    });
+
+    connectedRef.on("value", function (snap) {
+        // If they are connected add user to connection list
+        if (snap.val()) {
+            // Add user to the connections list.
+            var con = connectionsRef.push(true);
+            // Remove user from the connection list when they disconnect.
+            con.onDisconnect().remove();
+        }
+    });
+
+    function compareSelections(yourChoice, opponentChoice) {
+        //if (yourChoice) {
+        if ((yourChoice === "R" && opponentChoice === "S") ||
+            (yourChoice === "S" && opponentChoice === "P") ||
+            (yourChoice === "P" && opponentChoice === "R")) {
+            $("#game-outcome").text("You Win!");
+        } else if (yourChoice === opponentChoice) {
+            $("#game-outcome").text("You Tie!");
+        } else {
+            $("#game-outcome").text("You Lose!");
+        }
+        //}
+        
+
+    }
+
+
+
+
+    // pressRef.on("value", function (snap) {
+    //     if (snap.child("buttonPressed").val() > buttonPressed) {
+    //         buttonPress = snap.val().buttonPress;
+    //     }
+    //     console.log("buttons pressed value: " + buttonPressed);
+    // });
+
     function createButtons() {
-        var buttonNames = ["Rock", "Paper", "Seven"];
+        var buttonNames = ["Rock", "Paper", "Scissors"];
         for (var i = 0; i < buttonNames.length; i++) {
             var localButton = $("<button>");
             localButton.addClass("gameButton");
@@ -43,57 +146,17 @@ $(document).ready(function () {
         console.log("buttons created");
     }
 
-    $(document).on("click", ".gameButton", function () {
-        event.preventDefault();
-        var yourChoice = $(this).text();
-        yourChoice = yourChoice.charAt(0);
-        console.log("selected button: " + yourChoice);
 
         //buttonPressed = snap.val().pressRef;
-        buttonPressed ++;
-        database.ref("/buttonPressed").set(buttonPressed);
+        // buttonPressed++;
+        // database.ref("/buttonPressed").set(buttonPressed);
 
         //console.log("buttons pressed local: " + buttonPressed);
-        if (buttonPressed == 1) {
-            var player1Choice = yourChoice;
-        } else if (buttonPressed == 2) {
-            var player2Choice = yourChoice;
-            compareSelections(player1Choice, player2Choice);
-        }
-    });
 
-    //database.ref("/buttonPressed").on("value", function(snapshot) {
 
-    //});
 
-    // Add ourselves to presence list when online.
-    var connectedRef = database.ref(".info/connected");
-    connectedRef.on("value", function (snap) {
-        // If they are connected..
-        if (snap.val()) {
-            // Add user to the connections list.
-            var con = connectionsRef.push(true);
-            // Remove user from the connection list when they disconnect.
-            con.onDisconnect().remove();
-        }
-    });
 
-    var opponentChoice;
 
-    function compareSelections(player1Choice, player2Choice) {
-        //if (yourChoice) {
-        if ((player1Choice === "R" && player2Choice === "S") ||
-            (player1Choice === "S" && player2Choice === "P") ||
-            (player1Choice === "P" && player2Choice === "R")) {
-            $("#game-outcome").text("You Win!");
-        } else if (player1Choice === player2Choice) {
-            $("#game-outcome").text("You Tie!");
-        } else {
-            $("#game-outcome").text("You Lose!");
-        }
-        //}
-
-    }
 
     function restart() {
         database.ref().remove();
