@@ -42,6 +42,7 @@ $(document).ready(function () {
     });
 
     function gameSetUp() {
+        $("#play-again").empty();
         database.ref("/player1Choice").set({
             player1Choice: "o"
         });
@@ -66,23 +67,26 @@ $(document).ready(function () {
         console.log("player2ChoiceDatabaseValue is: " + player2ChoiceDatabaseValue)
     });
     database.ref("/winner").on("value", function (snap) {
-        if (snap.val().winner == 1){
-            if (yourPlayerNumber == 1){
+        if (snap.val().winner == 1) {
+            if (yourPlayerNumber == 1) {
                 $("#game-outcome").text("You Win!");
             } else {
                 $("#game-outcome").text("You Lose!");
             }
-        } else if (snap.val().winner == 2){
-            if (yourPlayerNumber == 2){
+            createRestartButton();
+        } else if (snap.val().winner == 2) {
+            if (yourPlayerNumber == 2) {
                 $("#game-outcome").text("You Win!");
             } else {
                 $("#game-outcome").text("You Lose!");
             }
+            createRestartButton();
         } else if (snap.val().winner == 3) {
             $("#game-outcome").text("You Tie!");
+            createRestartButton();
         } else {
-
         }
+
     });
 
 
@@ -110,7 +114,7 @@ $(document).ready(function () {
         if ((yourChoice === "R" && opponentChoice === "S") ||
             (yourChoice === "S" && opponentChoice === "P") ||
             (yourChoice === "P" && opponentChoice === "R")) {
-            if (yourPlayerNumber == 1){
+            if (yourPlayerNumber == 1) {
                 database.ref("/winner").set({
                     winner: 1
                 });
@@ -124,7 +128,7 @@ $(document).ready(function () {
                 winner: 3
             });
         } else {
-            if (yourPlayerNumber == 1){
+            if (yourPlayerNumber == 1) {
                 database.ref("/winner").set({
                     winner: 2
                 });
@@ -136,8 +140,6 @@ $(document).ready(function () {
         }
     }
 
-
-
     connectedRef.on("value", function (snap) {
         // If they are connected add user to connection list
         if (snap.val()) {
@@ -147,7 +149,6 @@ $(document).ready(function () {
             con.onDisconnect().remove();
         }
     });
-
 
     function createButtons() {
         var buttonNames = ["Rock", "Paper", "Scissors"];
@@ -160,4 +161,16 @@ $(document).ready(function () {
         //console.log("buttons created");
     }
 
+    function createRestartButton() {
+        var localButton = $("<button>");
+        localButton.addClass("restartButton");
+        localButton.text("Play Again");
+        $("#play-again").append(localButton);
+    }
+
+    $(document).on("click", ".restartButton", function () {
+        event.preventDefault();
+        $("#game-outcome").empty();
+        gameSetUp()
+    });
 })
