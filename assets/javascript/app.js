@@ -29,7 +29,6 @@ $(document).ready(function () {
     connectionsRef.on("value", function (snap) {
         // Display the viewer count in the html.
         // The number of online users is the number of children in the connections list.
-        //$("#connected-players").text("There are " + snap.numChildren() + " connected players");
         if (snap.numChildren() == 2) {
             //console.log("there are enough people to play the game");
             $("#connected-players").text("There are " + snap.numChildren() + " connected players");
@@ -43,6 +42,7 @@ $(document).ready(function () {
 
     function gameSetUp() {
         $("#play-again").empty();
+        $("#chat-area").empty();
         database.ref("/player1Choice").set({
             player1Choice: "o"
         });
@@ -51,6 +51,9 @@ $(document).ready(function () {
         });
         database.ref("/winner").set({
             winner: "o"
+        });
+        database.ref("/chat").set({
+            chat: ""
         });
         $("#buttons").empty();
         createButtons();
@@ -173,4 +176,27 @@ $(document).ready(function () {
         $("#game-outcome").empty();
         gameSetUp()
     });
+
+    var chatBox = "";
+
+    $(document).on("click", "#submit", function () {
+        event.preventDefault();
+        chatBox = $("#chat-input").val().trim();
+        database.ref("/chat").set({
+            chat: chatBox,
+        });
+        $('#chat-input').val('');
+    });
+
+    database.ref("/chat").on("value", function (snap) {
+        var chat = snap.val().chat;
+        $("#chat-area").append("<p>" + chat);
+        // update the DOM here
+    }, function (errorObject) {
+        console.log("The read failed: " + errorObject.code);
+    });
+
+
+
+
 })
